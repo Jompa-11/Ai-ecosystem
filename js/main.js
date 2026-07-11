@@ -1,11 +1,19 @@
-import { buildRoads, buildTrees, buildGrassDetail } from './world.js';
+import {
+  buildRoads,
+  buildBridges,
+  buildPosts,
+  buildProps,
+  buildGrassDetail,
+} from './world.js';
 import {
   drawGrassBase,
   drawGrassPatches,
   drawGrassTufts,
+  drawWater,
   drawRoads,
-  drawPlaza,
-  drawTree,
+  drawBridges,
+  drawPosts,
+  drawProp,
 } from './render.js';
 
 const canvas = document.getElementById('world');
@@ -13,7 +21,9 @@ const ctx = canvas.getContext('2d');
 
 // ---- Världsdata (genereras en gång) ----
 const roads = buildRoads();
-const trees = buildTrees(roads);
+const bridges = buildBridges(roads);
+const posts = buildPosts();
+const props = buildProps(roads);
 const grassDetail = buildGrassDetail();
 
 // ---- Kamera ----
@@ -114,14 +124,16 @@ function draw() {
   drawGrassBase(ctx, view);
   drawGrassPatches(ctx, view);
   drawGrassTufts(ctx, grassDetail, view);
+  drawWater(ctx, view);
   drawRoads(ctx, roads, view);
-  drawPlaza(ctx);
+  drawBridges(ctx, bridges);
+  drawPosts(ctx, posts, view);
 
-  for (const t of trees) {
-    if (t.x < view.left || t.x > view.right || t.y < view.top || t.y > view.bottom) {
+  for (const p of props) {
+    if (p.x < view.left || p.x > view.right || p.y < view.top || p.y > view.bottom) {
       continue;
     }
-    drawTree(ctx, t);
+    drawProp(ctx, p);
   }
 }
 
