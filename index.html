@@ -2,16 +2,17 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Medeltida AI-Ekosystem</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <canvas id="world"></canvas>
 
-  <div id="hud">
-    <h1>Medeltida AI-Ekosystem</h1>
-    <p class="hint">Dra för att panorera · Rulla för att zooma</p>
+  <div id="controls">
+    <button id="zoomIn" title="Zooma in">+</button>
+    <button id="zoomOut" title="Zooma ut">−</button>
+    <button id="reset" title="Återställ vy">⟲</button>
   </div>
 
   <script type="module" src="js/main.js"></script>

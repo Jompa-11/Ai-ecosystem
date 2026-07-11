@@ -1,43 +1,21 @@
-import {
-  buildRoads,
-  buildBridges,
-  buildPosts,
-  buildProps,
-  buildGrassDetail,
-} from './world.js';
-import {
-  drawGrassBase,
-  drawGrassPatches,
-  drawGrassTufts,
-  drawWater,
-  drawRoads,
-  drawBridges,
-  drawPosts,
-  drawProp,
-} from './render.js';
+// Enkel bildvisare för ekosystem-kartan: zooma och panorera.
+// Bilden laddas från assets/ecosystem.png.
+
+const IMAGE_SRC = 'assets/ecosystem.png';
 
 const canvas = document.getElementById('world');
 const ctx = canvas.getContext('2d');
 
-// ---- Världsdata (genereras en gång) ----
-const roads = buildRoads();
-const bridges = buildBridges(roads);
-const posts = buildPosts();
-const props = buildProps(roads);
-const grassDetail = buildGrassDetail();
+const img = new Image();
+let imageReady = false;
+let imageFailed = false;
 
-// ---- Kamera ----
-const camera = {
-  x: 0,        // världspunkt i mitten av skärmen
-  y: 0,
-  zoom: 0.85,
-  minZoom: 0.25,
-  maxZoom: 2.5,
-};
+// Vy: skala + förskjutning (bildens övre vänstra hörn i skärmkoordinater).
+const viewState = { scale: 1, x: 0, y: 0, minScale: 1, maxScale: 6 };
 
 let width = 0;
 let height = 0;
-let dpr = Math.min(window.devicePixelRatio || 1, 2);
+let dpr = 1;
 
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -47,11 +25,95 @@ function resize() {
   canvas.height = Math.floor(height * dpr);
   canvas.style.width = width + 'px';
   canvas.style.height = height + 'px';
-  needsDraw = true;
+  if (imageReady) {
+    computeMinScale();
+    clamp();
+  }
+  draw();
 }
-window.addEventListener('resize', resize);
 
-// ---- Interaktion: panorera ----
+// Minsta skala = bilden får plats helt i fönstret (contain).
+function computeMinScale() {
+  viewState.minScale = Math.min(width / img.width, height / img.height);
+  viewState.maxScale = viewState.minScale * 6;
+  if (viewState.scale < viewState.minScale) viewState.scale = viewState.minScale;
+}
+
+// Centrera och passa in hela bilden.
+function fitToScreen() {
+  computeMinScale();
+  viewState.scale = viewState.minScale;
+  viewState.x = (width - img.width * viewState.scale) / 2;
+  viewState.y = (height - img.height * viewState.scale) / 2;
+  draw();
+}
+
+// Håll bilden inom rimliga gränser (ingen tom rymd runt om).
+function clamp() {
+  const w = img.width * viewState.scale;
+  const h = img.height * viewState.scale;
+  if (w <= width) {
+    viewState.x = (width - w) / 2;
+  } else {
+    viewState.x = Math.min(0, Math.max(width - w, viewState.x));
+  }
+  if (h <= height) {
+    viewState.y = (height - h) / 2;
+  } else {
+    viewState.y = Math.min(0, Math.max(height - h, viewState.y));
+  }
+}
+
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = '#0d130c';
+  ctx.fillRect(0, 0, width, height);
+
+  if (!imageReady) {
+    drawMessage(
+      imageFailed
+        ? 'Lägg din kartbild i  assets/ecosystem.png'
+        : 'Laddar karta …'
+    );
+    return;
+  }
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(
+    img,
+    viewState.x,
+    viewState.y,
+    img.width * viewState.scale,
+    img.height * viewState.scale
+  );
+}
+
+function drawMessage(text) {
+  ctx.fillStyle = '#f4e9d0';
+  ctx.font = '20px Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, width / 2, height / 2);
+}
+
+// Zooma mot en viss skärmpunkt (px, py).
+function zoomAt(px, py, factor) {
+  const newScale = Math.max(
+    viewState.minScale,
+    Math.min(viewState.maxScale, viewState.scale * factor)
+  );
+  const ratio = newScale / viewState.scale;
+  // Håll punkten under pekaren stilla.
+  viewState.x = px - (px - viewState.x) * ratio;
+  viewState.y = py - (py - viewState.y) * ratio;
+  viewState.scale = newScale;
+  clamp();
+  draw();
+}
+
+// ---- Musinteraktion ----
 let dragging = false;
 let lastX = 0;
 let lastY = 0;
@@ -65,85 +127,77 @@ canvas.addEventListener('pointerdown', (e) => {
 
 canvas.addEventListener('pointermove', (e) => {
   if (!dragging) return;
-  const dx = e.clientX - lastX;
-  const dy = e.clientY - lastY;
+  viewState.x += e.clientX - lastX;
+  viewState.y += e.clientY - lastY;
   lastX = e.clientX;
   lastY = e.clientY;
-  camera.x -= dx / camera.zoom;
-  camera.y -= dy / camera.zoom;
-  needsDraw = true;
+  clamp();
+  draw();
 });
 
-canvas.addEventListener('pointerup', (e) => {
+function endDrag(e) {
   dragging = false;
-  canvas.releasePointerCapture(e.pointerId);
-});
+  if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
 
-// ---- Interaktion: zooma mot muspekaren ----
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
-  const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-  const newZoom = Math.max(camera.minZoom, Math.min(camera.maxZoom, camera.zoom * factor));
-
-  // Håll punkten under muspekaren stilla.
-  const wx = camera.x + (e.clientX - width / 2) / camera.zoom;
-  const wy = camera.y + (e.clientY - height / 2) / camera.zoom;
-  camera.zoom = newZoom;
-  camera.x = wx - (e.clientX - width / 2) / camera.zoom;
-  camera.y = wy - (e.clientY - height / 2) / camera.zoom;
-  needsDraw = true;
+  const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+  zoomAt(e.clientX, e.clientY, factor);
 }, { passive: false });
 
-// ---- Synligt världsområde (för culling) ----
-function computeView() {
-  const halfW = width / 2 / camera.zoom;
-  const halfH = height / 2 / camera.zoom;
-  const pad = 60;
-  return {
-    left: camera.x - halfW - pad,
-    right: camera.x + halfW + pad,
-    top: camera.y - halfH - pad,
-    bottom: camera.y + halfH + pad,
-  };
-}
+// ---- Pekskärm: nyp för att zooma ----
+const activePointers = new Map();
+let pinchDist = 0;
 
-// ---- Rendering ----
-let needsDraw = true;
-
-function draw() {
-  const view = computeView();
-
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, width, height);
-
-  // Kameratransform: mitten av skärmen = (camera.x, camera.y).
-  ctx.translate(width / 2, height / 2);
-  ctx.scale(camera.zoom, camera.zoom);
-  ctx.translate(-camera.x, -camera.y);
-
-  drawGrassBase(ctx, view);
-  drawGrassPatches(ctx, view);
-  drawGrassTufts(ctx, grassDetail, view);
-  drawWater(ctx, view);
-  drawRoads(ctx, roads, view);
-  drawBridges(ctx, bridges);
-  drawPosts(ctx, posts, view);
-
-  for (const p of props) {
-    if (p.x < view.left || p.x > view.right || p.y < view.top || p.y > view.bottom) {
-      continue;
-    }
-    drawProp(ctx, p);
+canvas.addEventListener('pointerdown', (e) => {
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (activePointers.size === 2) {
+    dragging = false;
+    const [a, b] = [...activePointers.values()];
+    const dist = Math.hypot(a.x - b.x, a.y - b.y);
+    const midX = (a.x + b.x) / 2;
+    const midY = (a.y + b.y) / 2;
+    if (pinchDist > 0) zoomAt(midX, midY, dist / pinchDist);
+    pinchDist = dist;
   }
+});
+function dropPointer(e) {
+  activePointers.delete(e.pointerId);
+  if (activePointers.size < 2) pinchDist = 0;
 }
+canvas.addEventListener('pointerup', dropPointer);
+canvas.addEventListener('pointercancel', dropPointer);
 
-function loop() {
-  if (needsDraw) {
-    draw();
-    needsDraw = false;
-  }
-  requestAnimationFrame(loop);
-}
+// ---- Knappar ----
+document.getElementById('zoomIn').addEventListener('click', () =>
+  zoomAt(width / 2, height / 2, 1.3)
+);
+document.getElementById('zoomOut').addEventListener('click', () =>
+  zoomAt(width / 2, height / 2, 1 / 1.3)
+);
+document.getElementById('reset').addEventListener('click', fitToScreen);
 
+// Dubbelklick för att zooma in.
+canvas.addEventListener('dblclick', (e) => zoomAt(e.clientX, e.clientY, 1.6));
+
+// ---- Ladda bild ----
+img.onload = () => {
+  imageReady = true;
+  imageFailed = false;
+  fitToScreen();
+};
+img.onerror = () => {
+  imageFailed = true;
+  draw();
+};
+img.src = IMAGE_SRC;
+
+window.addEventListener('resize', resize);
 resize();
-loop();
