@@ -17,14 +17,22 @@ let width = 0;
 let height = 0;
 let dpr = 1;
 
+// Pekarposition relativt canvasens övre vänstra hörn (canvasen kan ligga
+// under topbaren).
+function localPoint(e) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
-  width = window.innerWidth;
-  height = window.innerHeight;
+  // Visningsstorleken styrs av CSS (100vw x höjd under topbaren). Vi läser
+  // den och sätter bara upp bakgrundsbufferten skalad efter dpr.
+  const rect = canvas.getBoundingClientRect();
+  width = rect.width;
+  height = rect.height;
   canvas.width = Math.floor(width * dpr);
   canvas.height = Math.floor(height * dpr);
-  canvas.style.width = width + 'px';
-  canvas.style.height = height + 'px';
   if (imageReady) {
     computeMinScale();
     clamp();
@@ -145,7 +153,8 @@ canvas.addEventListener('pointercancel', endDrag);
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-  zoomAt(e.clientX, e.clientY, factor);
+  const pt = localPoint(e);
+  zoomAt(pt.x, pt.y, factor);
 }, { passive: false });
 
 // ---- Pekskärm: nyp för att zooma ----
@@ -162,8 +171,9 @@ canvas.addEventListener('pointermove', (e) => {
     dragging = false;
     const [a, b] = [...activePointers.values()];
     const dist = Math.hypot(a.x - b.x, a.y - b.y);
-    const midX = (a.x + b.x) / 2;
-    const midY = (a.y + b.y) / 2;
+    const rect = canvas.getBoundingClientRect();
+    const midX = (a.x + b.x) / 2 - rect.left;
+    const midY = (a.y + b.y) / 2 - rect.top;
     if (pinchDist > 0) zoomAt(midX, midY, dist / pinchDist);
     pinchDist = dist;
   }
@@ -185,7 +195,10 @@ document.getElementById('zoomOut').addEventListener('click', () =>
 document.getElementById('reset').addEventListener('click', fitToScreen);
 
 // Dubbelklick för att zooma in.
-canvas.addEventListener('dblclick', (e) => zoomAt(e.clientX, e.clientY, 1.6));
+canvas.addEventListener('dblclick', (e) => {
+  const pt = localPoint(e);
+  zoomAt(pt.x, pt.y, 1.6);
+});
 
 // ---- Ladda bild ----
 img.onload = () => {

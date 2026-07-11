@@ -7,14 +7,37 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <!-- Topbar / dashboard -->
+  <header id="topbar">
+    <div class="bar-cap left"></div>
+    <div id="stats"></div>
+    <div class="bar-cap right"></div>
+  </header>
+
+  <!-- Karta -->
   <canvas id="world"></canvas>
 
+  <!-- Agent-panel (fällbar) -->
+  <aside id="sidebar">
+    <div class="panel">
+      <div class="panel-head">
+        <span>Agenter</span>
+        <button id="agentsToggle" title="Fäll in">‹</button>
+      </div>
+      <ul id="agentList"></ul>
+      <div class="panel-foot"></div>
+    </div>
+  </aside>
+  <button id="agentsReopen" title="Visa agenter">›</button>
+
+  <!-- Zoom-kontroller -->
   <div id="controls">
     <button id="zoomIn" title="Zooma in">+</button>
     <button id="zoomOut" title="Zooma ut">−</button>
     <button id="reset" title="Återställ vy">⟲</button>
   </div>
 
+  <script type="module" src="js/ui.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -4,26 +4,215 @@
   box-sizing: border-box;
 }
 
+:root {
+  --topbar-h: 74px;
+  --gold: #d9b25a;
+  --gold-dim: #a07d34;
+  --panel-bg: #14110c;
+  --panel-bg2: #1d1811;
+  --frame: #6b551f;
+}
+
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0d130c;
+  background: #0d0b08;
   font-family: 'Georgia', 'Times New Roman', serif;
+  color: #f4e9d0;
 }
 
+/* ---- Karta ---- */
 #world {
-  display: block;
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - var(--topbar-h));
+  display: block;
   cursor: grab;
   touch-action: none;
 }
+#world:active { cursor: grabbing; }
 
-#world:active {
-  cursor: grabbing;
+/* ---- Topbar / dashboard ---- */
+#topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: stretch;
+  background:
+    linear-gradient(180deg, #201a12 0%, #14100b 55%, #0c0906 100%);
+  border-bottom: 2px solid var(--frame);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6), inset 0 0 0 1px #2c2415;
+  z-index: 30;
+  user-select: none;
 }
 
+#stats {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 4px;
+  padding: 0 10px;
+  overflow-x: auto;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+.stat-ic svg { width: 30px; height: 30px; display: block; }
+
+.stat-txt { display: flex; flex-direction: column; line-height: 1.15; }
+.stat-label {
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: #cbb98f;
+}
+.stat-value {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.stat-div {
+  width: 2px;
+  align-self: center;
+  height: 42px;
+  background: linear-gradient(180deg, transparent, var(--gold-dim), transparent);
+  opacity: 0.6;
+}
+
+/* Ornamenterade ändstycken med röd ädelsten */
+.bar-cap {
+  width: 58px;
+  position: relative;
+  background: linear-gradient(180deg, #2a2114, #100c08);
+  border-right: 2px solid var(--frame);
+  flex: none;
+}
+.bar-cap.right { border-right: none; border-left: 2px solid var(--frame); }
+.bar-cap::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: radial-gradient(circle at 40% 35%, #ff6a5a, #b0231a 60%, #6c0f0a);
+  box-shadow: 0 0 10px rgba(224, 60, 45, 0.8), 0 0 0 2px #7a5a20;
+}
+
+/* ---- Agent-panel ---- */
+#sidebar {
+  position: fixed;
+  top: calc(var(--topbar-h) + 14px);
+  left: 14px;
+  width: 240px;
+  z-index: 25;
+  transition: transform 0.28s ease;
+  user-select: none;
+}
+
+.panel {
+  background: linear-gradient(180deg, var(--panel-bg2), var(--panel-bg));
+  border: 2px solid var(--frame);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 0 0 1px #2c2415;
+  overflow: hidden;
+}
+
+.panel-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  font-variant: small-caps;
+  letter-spacing: 2px;
+  font-size: 20px;
+  color: var(--gold);
+  background: linear-gradient(180deg, #241c11, #16110b);
+  border-bottom: 1px solid var(--frame);
+}
+
+#agentsToggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--frame);
+  border-radius: 5px;
+  background: #2a2114;
+  color: var(--gold);
+  font-size: 16px;
+  cursor: pointer;
+}
+#agentsToggle:hover { background: #3a2e19; }
+
+#agentList { list-style: none; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+
+.agent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid #3a2e19;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(40, 32, 18, 0.6), rgba(20, 16, 10, 0.6));
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.agent:hover { border-color: var(--gold-dim); background: rgba(50, 40, 22, 0.7); }
+
+.agent-ic svg { width: 40px; height: 40px; display: block; }
+.agent-txt { display: flex; flex-direction: column; gap: 3px; }
+.agent-name { font-size: 15px; color: #f0e6cf; }
+.agent-owner { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #b9ab8b; }
+.dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+
+.panel-foot {
+  height: 14px;
+  background: linear-gradient(180deg, #16110b, #100c08);
+  border-top: 1px solid #2c2415;
+}
+
+/* Reopen-flik (visas när panelen är infälld) */
+#agentsReopen {
+  position: fixed;
+  top: calc(var(--topbar-h) + 14px);
+  left: 0;
+  width: 30px;
+  height: 46px;
+  border: 2px solid var(--frame);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  background: linear-gradient(180deg, #241c11, #16110b);
+  color: var(--gold);
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 25;
+  display: none;
+}
+
+/* Infällt läge */
+body.agents-collapsed #sidebar { transform: translateX(calc(-100% - 20px)); }
+body.agents-collapsed #agentsReopen { display: block; }
+
+/* ---- Zoom-kontroller ---- */
 #controls {
   position: fixed;
   right: 16px;
@@ -31,27 +220,31 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  z-index: 25;
   user-select: none;
 }
-
 #controls button {
   width: 44px;
   height: 44px;
-  border: 1px solid #6b5a3a;
+  border: 1px solid var(--frame);
   border-radius: 8px;
-  background: rgba(24, 20, 12, 0.85);
-  color: #f4e9d0;
+  background: rgba(24, 20, 12, 0.9);
+  color: var(--gold);
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   transition: background 0.15s;
 }
+#controls button:hover { background: rgba(60, 48, 26, 0.95); }
+#controls button:active { background: rgba(90, 72, 40, 1); }
 
-#controls button:hover {
-  background: rgba(60, 48, 26, 0.95);
-}
-
-#controls button:active {
-  background: rgba(90, 72, 40, 1);
+@media (max-width: 640px) {
+  :root { --topbar-h: 62px; }
+  .stat { gap: 7px; padding: 4px 8px; }
+  .stat-value { font-size: 16px; }
+  .stat-label { font-size: 11px; }
+  .stat-ic svg { width: 22px; height: 22px; }
+  .bar-cap { width: 26px; }
+  #sidebar { width: 200px; }
 }
