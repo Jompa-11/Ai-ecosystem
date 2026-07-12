@@ -1,18 +1,5 @@
-// Ekosystem-vy: en stor, scrollbar värld. Den centrala kartbilden (dina
-// byggnader) ligger orörd i mitten; runt den genereras en vildmark (skog,
-// berg, dammar, stigar) så det finns gott om plats för framtida agenter.
-
-import { buildWilderness } from './wilderness.js';
-import {
-  drawWildBase,
-  drawWildGrassPatches,
-  drawWildGrassTufts,
-  drawBorderGlow,
-  drawPaths,
-  drawPonds,
-  drawRock,
-  drawTree,
-} from './wildrender.js';
+// Enkel bildvisare för ekosystem-kartan: zooma och panorera.
+// Bilden laddas från assets/ecosystem.png.
 
 const IMAGE_SRC = 'assets/ecosystem.png';
 
@@ -23,14 +10,8 @@ const img = new Image();
 let imageReady = false;
 let imageFailed = false;
 
-// world = { w, h, offsetX, offsetY, bitmapW, bitmapH } — hela världens mått
-// och var den ursprungliga kartbilden är placerad inuti den.
-let world = null;
-let wild = null;
-let lamps = [];
-
-// Vy: skala + förskjutning (världens övre vänstra hörn i skärmkoordinater).
-const viewState = { scale: 1, x: 0, y: 0, minScale: 1, maxScale: 6, defaultScale: 1 };
+// Vy: skala + förskjutning (bildens övre vänstra hörn i skärmkoordinater).
+const viewState = { scale: 1, x: 0, y: 0, minScale: 1, maxScale: 6 };
 
 let width = 0;
 let height = 0;
@@ -45,10 +26,14 @@ function localPoint(e) {
 
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Topbaren är en bild med dynamisk höjd (bredd = 100vw). Läs dess höjd och
+  // låt kartan börja precis under den.
   const topbar = document.getElementById('topbar');
   if (topbar && topbar.clientHeight) {
     document.documentElement.style.setProperty('--topbar-h', topbar.clientHeight + 'px');
   }
+  // Visningsstorleken styrs av CSS (100vw x höjd under topbaren). Vi läser
+  // den och sätter bara upp bakgrundsbufferten skalad efter dpr.
   const rect = canvas.getBoundingClientRect();
   width = rect.width;
   height = rect.height;
@@ -61,34 +46,27 @@ function resize() {
   draw();
 }
 
-// minScale = hela världen får plats (kan zoomas ut helt). defaultScale =
-// samma vy som tidigare (kartbilden fyller skärmen), används vid start och
-// vid "återställ vy".
+// Minsta skala = bilden FYLLER hela ytan (cover) så det aldrig blir svarta
+// kanter, precis som i mockupen. Man kan zooma in mer men inte ut förbi detta.
 function computeMinScale() {
-  const bitmapCover = Math.max(width / world.bitmapW, height / world.bitmapH);
-  viewState.minScale = Math.min(width / world.w, height / world.h);
-  viewState.defaultScale = bitmapCover;
-  viewState.maxScale = bitmapCover * 4;
+  viewState.minScale = Math.max(width / img.width, height / img.height);
+  viewState.maxScale = viewState.minScale * 4;
   if (viewState.scale < viewState.minScale) viewState.scale = viewState.minScale;
-  if (viewState.scale > viewState.maxScale) viewState.scale = viewState.maxScale;
 }
 
-// Centrera på kartbilden i standard-zoom (samma startvy som tidigare).
+// Centrera och fyll ytan med bilden.
 function fitToScreen() {
   computeMinScale();
-  viewState.scale = viewState.defaultScale;
-  const bx = world.offsetX + world.bitmapW / 2;
-  const by = world.offsetY + world.bitmapH / 2;
-  viewState.x = width / 2 - bx * viewState.scale;
-  viewState.y = height / 2 - by * viewState.scale;
-  clamp();
+  viewState.scale = viewState.minScale;
+  viewState.x = (width - img.width * viewState.scale) / 2;
+  viewState.y = (height - img.height * viewState.scale) / 2;
   draw();
 }
 
-// Håll världen inom rimliga gränser (ingen tom rymd runt om).
+// Håll bilden inom rimliga gränser (ingen tom rymd runt om).
 function clamp() {
-  const w = world.w * viewState.scale;
-  const h = world.h * viewState.scale;
+  const w = img.width * viewState.scale;
+  const h = img.height * viewState.scale;
   if (w <= width) {
     viewState.x = (width - w) / 2;
   } else {
@@ -101,14 +79,10 @@ function clamp() {
   }
 }
 
-function inView(x, y, view) {
-  return x >= view.left && x <= view.right && y >= view.top && y <= view.bottom;
-}
-
 function draw() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = '#0e1809';
+  ctx.fillStyle = '#0d130c';
   ctx.fillRect(0, 0, width, height);
 
   if (!imageReady) {
@@ -120,42 +94,17 @@ function draw() {
     return;
   }
 
-  const scale = viewState.scale;
-  const pad = 100;
-  const view = {
-    left: -viewState.x / scale - pad,
-    top: -viewState.y / scale - pad,
-    right: (width - viewState.x) / scale + pad,
-    bottom: (height - viewState.y) / scale + pad,
-  };
-
-  // Alla efterföljande ritningar sker i världskoordinater tack vare denna
-  // transform (skala + panorering hanteras automatiskt av canvas).
-  ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * viewState.x, dpr * viewState.y);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(
+    img,
+    viewState.x,
+    viewState.y,
+    img.width * viewState.scale,
+    img.height * viewState.scale
+  );
 
-  // 1) Vildmarkens botten, textur, gloria runt kartbilden, dammar och stigar.
-  drawWildBase(ctx, view, world);
-  drawWildGrassPatches(ctx, view);
-  drawWildGrassTufts(ctx, view);
-  drawBorderGlow(ctx, world);
-  drawPonds(ctx, wild.ponds);
-  drawPaths(ctx, wild.paths);
-
-  // 2) Stenblock och skog (kringgår den centrala kartbilden helt).
-  for (const r of wild.rocks) {
-    if (inView(r.x, r.y, view)) drawRock(ctx, r);
-  }
-  for (const t of wild.trees) {
-    if (inView(t.x, t.y, view)) drawTree(ctx, t);
-  }
-
-  // 3) Den ursprungliga kartbilden, orörd, ovanpå allt.
-  ctx.drawImage(img, world.offsetX, world.offsetY, world.bitmapW, world.bitmapH);
-
-  // 4) Levande ljus (både i bilden och i vildmarken).
-  drawGlows(view, scale);
+  drawGlows();
 }
 
 function drawMessage(text) {
@@ -172,50 +121,48 @@ function hash(n) {
   return s - Math.floor(s);
 }
 
-// Slår ihop lamporna från kartbilden (offsatta till världskoordinater) med
-// facklorna från vildmarken till en gemensam lista, var och en med egen
-// fas/hastighet så de flämtar oberoende.
-function buildLamps() {
-  const raw = window.LAMPS || [];
-  const bitmapLamps = raw.map(([x, y, r, g, b]) => [x + world.offsetX, y + world.offsetY, r, g, b]);
-  const combined = bitmapLamps.concat(wild.torches);
-  lamps = combined.map(([x, y, r, g, b]) => {
-    const h1 = hash(x * 1.7 + y * 0.3);
-    const h2 = hash(x * 0.11 + y * 2.9);
-    return {
-      x, y,
-      ph: h1 * Math.PI * 2,
-      ph2: h2 * Math.PI * 2,
-      sp1: 1.6 + h2 * 1.6,
-      sp2: 3.8 + h1 * 2.4,
-      baseR: 11,
-      col: [Math.min(255, r + 30), Math.min(255, g + 42), Math.min(255, b + 12)],
-    };
-  });
-}
+// Förbered varje lampa med egen fas/hastighet så de flämtar oberoende.
+const lamps = (window.LAMPS || []).map(([x, y, r, g, b]) => {
+  const h1 = hash(x * 1.7 + y * 0.3);
+  const h2 = hash(x * 0.11 + y * 2.9);
+  return {
+    x, y,
+    ph: h1 * Math.PI * 2,
+    ph2: h2 * Math.PI * 2,
+    sp1: 1.6 + h2 * 1.6,
+    sp2: 3.8 + h1 * 2.4,
+    baseR: 11,
+    col: [Math.min(255, r + 30), Math.min(255, g + 42), Math.min(255, b + 12)],
+  };
+});
 
 let animTime = 0;
 
-function drawGlows(view, scale) {
-  if (!lamps.length) return;
+function drawGlows() {
+  if (!lamps.length || !imageReady) return;
+  const s = viewState.scale;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
+  const pad = 50;
   for (const L of lamps) {
-    if (!inView(L.x, L.y, view)) continue;
+    const sx = viewState.x + L.x * s;
+    const sy = viewState.y + L.y * s;
+    if (sx < -pad || sy < -pad || sx > width + pad || sy > height + pad) continue;
+    // Organisk flämtning (summa av två sinusvågor).
     let f = 0.70 + 0.20 * Math.sin(animTime * L.sp1 + L.ph)
                  + 0.12 * Math.sin(animTime * L.sp2 + L.ph2);
     if (f < 0.35) f = 0.35; else if (f > 1.15) f = 1.15;
-    const rad = L.baseR * (0.9 + 0.30 * f);
-    if (rad * scale < 0.6) continue;
+    const rad = L.baseR * s * (0.9 + 0.30 * f);
+    if (rad < 0.6) continue;
     const a = 0.36 * f;
     const [cr, cg, cb] = L.col;
-    const grd = ctx.createRadialGradient(L.x, L.y, 0, L.x, L.y, rad);
+    const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, rad);
     grd.addColorStop(0, `rgba(${cr},${cg},${cb},${a})`);
     grd.addColorStop(0.45, `rgba(${cr},${cg},${cb},${a * 0.45})`);
     grd.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
     ctx.fillStyle = grd;
     ctx.beginPath();
-    ctx.arc(L.x, L.y, rad, 0, Math.PI * 2);
+    ctx.arc(sx, sy, rad, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -228,6 +175,7 @@ function zoomAt(px, py, factor) {
     Math.min(viewState.maxScale, viewState.scale * factor)
   );
   const ratio = newScale / viewState.scale;
+  // Håll punkten under pekaren stilla.
   viewState.x = px - (px - viewState.x) * ratio;
   viewState.y = py - (py - viewState.y) * ratio;
   viewState.scale = newScale;
@@ -316,10 +264,6 @@ canvas.addEventListener('dblclick', (e) => {
 
 // ---- Ladda bild ----
 img.onload = () => {
-  const built = buildWilderness(img.naturalWidth, img.naturalHeight);
-  world = built.world;
-  wild = built;
-  buildLamps();
   imageReady = true;
   imageFailed = false;
   fitToScreen();
