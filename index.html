@@ -7,50 +7,16 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <!-- Topbar / dashboard -->
-  <header id="topbar">
-    <div class="bar-cap left">
-      <span class="stone"></span>
-      <i class="gem"></i>
-    </div>
-    <div id="stats"></div>
-    <div class="bar-cap right">
-      <svg class="emblem" viewBox="0 0 120 60" aria-hidden="true">
-        <g fill="#d9b25a" stroke="#8a6a20" stroke-width="0.8" stroke-linejoin="round">
-          <path d="M52 26q-14-6-30-4 10 2 16 7-12-2-22 3 10 1 17 5-9 1-15 6 14 0 26-6 6-3 8-9z"/>
-          <path d="M68 26q14-6 30-4-10 2-16 7 12-2 22 3-10 1-17 5 9 1 15 6-14 0-26-6-6-3-8-9z"/>
-          <circle cx="60" cy="29" r="9" fill="#b0231a"/>
-          <circle cx="60" cy="26" r="3.5" fill="#ffd782"/>
-        </g>
-      </svg>
-      <i class="gem"></i>
-    </div>
-  </header>
-
   <!-- Karta -->
   <canvas id="world"></canvas>
 
-  <!-- Agent-panel (fällbar) -->
+  <!-- Topbar (din exakta bild) -->
+  <img id="topbar" src="assets/ui/topbar.png" alt="Dashboard" />
+
+  <!-- Agent-panel (din exakta bild, fällbar) -->
   <aside id="sidebar">
-    <div class="panel">
-      <i class="gem corner tl"></i><i class="gem corner tr"></i>
-      <i class="gem corner bl"></i><i class="gem corner br"></i>
-      <div class="panel-head">
-        <span>Agenter</span>
-        <button id="agentsToggle" title="Fäll in">‹</button>
-      </div>
-      <ul id="agentList"></ul>
-      <div class="panel-foot">
-        <svg class="emblem sm" viewBox="0 0 120 60" aria-hidden="true">
-          <g fill="#d9b25a" stroke="#8a6a20" stroke-width="1">
-            <path d="M58 30C40 11 22 15 7 20c16 2 24 8 34 14-14-2-22 2-30 8 16-2 34-2 47-8z"/>
-            <path d="M62 30c18-19 36-15 51-10-16 2-24 8-34 14 14-2 22 2 30 8-16-2-34-2-47-8z"/>
-            <circle cx="60" cy="30" r="8" fill="#b0231a"/>
-            <circle cx="60" cy="30" r="3" fill="#ffd782"/>
-          </g>
-        </svg>
-      </div>
-    </div>
+    <img id="panelImg" src="assets/ui/panel.png" alt="Agenter" />
+    <button id="agentsToggle" title="Fäll in"></button>
   </aside>
   <button id="agentsReopen" title="Visa agenter">›</button>
 

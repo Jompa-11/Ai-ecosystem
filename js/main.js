@@ -26,6 +26,12 @@ function localPoint(e) {
 
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Topbaren är en bild med dynamisk höjd (bredd = 100vw). Läs dess höjd och
+  // låt kartan börja precis under den.
+  const topbar = document.getElementById('topbar');
+  if (topbar && topbar.clientHeight) {
+    document.documentElement.style.setProperty('--topbar-h', topbar.clientHeight + 'px');
+  }
   // Visningsstorleken styrs av CSS (100vw x höjd under topbaren). Vi läser
   // den och sätter bara upp bakgrundsbufferten skalad efter dpr.
   const rect = canvas.getBoundingClientRect();
@@ -211,6 +217,13 @@ img.onerror = () => {
   draw();
 };
 img.src = IMAGE_SRC;
+
+// Justera om kartytan när topbar-bilden fått sin höjd.
+const topbarImg = document.getElementById('topbar');
+if (topbarImg) {
+  if (topbarImg.complete) resize();
+  topbarImg.addEventListener('load', resize);
+}
 
 window.addEventListener('resize', resize);
 resize();
