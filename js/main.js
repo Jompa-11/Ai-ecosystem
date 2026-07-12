@@ -103,6 +103,8 @@ function draw() {
     img.width * viewState.scale,
     img.height * viewState.scale
   );
+
+  drawGlows();
 }
 
 function drawMessage(text) {
@@ -111,6 +113,59 @@ function drawMessage(text) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, width / 2, height / 2);
+}
+
+// ---- Levande ljus: animerad glöd på befintliga lampor/facklor ----
+function hash(n) {
+  const s = Math.sin(n) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+// Förbered varje lampa med egen fas/hastighet så de flämtar oberoende.
+const lamps = (window.LAMPS || []).map(([x, y, r, g, b]) => {
+  const h1 = hash(x * 1.7 + y * 0.3);
+  const h2 = hash(x * 0.11 + y * 2.9);
+  return {
+    x, y,
+    ph: h1 * Math.PI * 2,
+    ph2: h2 * Math.PI * 2,
+    sp1: 1.6 + h2 * 1.6,
+    sp2: 3.8 + h1 * 2.4,
+    baseR: 11,
+    col: [Math.min(255, r + 30), Math.min(255, g + 42), Math.min(255, b + 12)],
+  };
+});
+
+let animTime = 0;
+
+function drawGlows() {
+  if (!lamps.length || !imageReady) return;
+  const s = viewState.scale;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const pad = 50;
+  for (const L of lamps) {
+    const sx = viewState.x + L.x * s;
+    const sy = viewState.y + L.y * s;
+    if (sx < -pad || sy < -pad || sx > width + pad || sy > height + pad) continue;
+    // Organisk flämtning (summa av två sinusvågor).
+    let f = 0.70 + 0.20 * Math.sin(animTime * L.sp1 + L.ph)
+                 + 0.12 * Math.sin(animTime * L.sp2 + L.ph2);
+    if (f < 0.35) f = 0.35; else if (f > 1.15) f = 1.15;
+    const rad = L.baseR * s * (0.9 + 0.30 * f);
+    if (rad < 0.6) continue;
+    const a = 0.36 * f;
+    const [cr, cg, cb] = L.col;
+    const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, rad);
+    grd.addColorStop(0, `rgba(${cr},${cg},${cb},${a})`);
+    grd.addColorStop(0.45, `rgba(${cr},${cg},${cb},${a * 0.45})`);
+    grd.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(sx, sy, rad, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 // Zooma mot en viss skärmpunkt (px, py).
@@ -228,3 +283,11 @@ if (topbarImg) {
 
 window.addEventListener('resize', resize);
 resize();
+
+// Kontinuerlig animationsloop för de levande ljusen.
+function frame(now) {
+  animTime = now / 1000;
+  draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
