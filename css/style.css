@@ -64,16 +64,18 @@ html, body {
 /* ---- Agent-panel (exakt bild) ---- */
 #sidebar {
   position: fixed;
-  top: calc(var(--topbar-h) + 10px);
+  top: calc(var(--topbar-h) + 8px);
   left: 10px;
-  width: 244px;
+  width: auto;
   z-index: 25;
   transition: transform 0.28s ease;
   user-select: none;
 }
 #panelImg {
-  width: 100%;
-  height: auto;
+  /* Höjd-styrd: fyller aldrig mer än ytan under topbaren, max 470px.
+     Bredden följer proportionellt (ingen förvrängning). */
+  height: min(calc(100vh - var(--topbar-h) - 24px), 470px);
+  width: auto;
   display: block;
   -webkit-user-drag: none;
   filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.6));

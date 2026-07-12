@@ -46,14 +46,15 @@ function resize() {
   draw();
 }
 
-// Minsta skala = bilden får plats helt i fönstret (contain).
+// Minsta skala = bilden FYLLER hela ytan (cover) så det aldrig blir svarta
+// kanter, precis som i mockupen. Man kan zooma in mer men inte ut förbi detta.
 function computeMinScale() {
-  viewState.minScale = Math.min(width / img.width, height / img.height);
-  viewState.maxScale = viewState.minScale * 6;
+  viewState.minScale = Math.max(width / img.width, height / img.height);
+  viewState.maxScale = viewState.minScale * 4;
   if (viewState.scale < viewState.minScale) viewState.scale = viewState.minScale;
 }
 
-// Centrera och passa in hela bilden.
+// Centrera och fyll ytan med bilden.
 function fitToScreen() {
   computeMinScale();
   viewState.scale = viewState.minScale;
