@@ -81,20 +81,21 @@ html, body {
   -webkit-user-drag: none;
   filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.6));
 }
-/* Osynlig klickyta ovanpå «-pilen i panelbilden.
-   Procent-baserad så den alltid ligger på pilen även när panelen skalas. */
+/* Klickyta som täcker hela "AGENTER"-rubrikraden (där pilen sitter).
+   Stor och lätt att träffa på både mus och pekskärm. */
 #agentsToggle {
   position: absolute;
-  top: 1%;
-  right: 2.5%;
-  width: 16%;
-  height: 7.5%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 15%;
   border: none;
   background: transparent;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 8px 8px 0 0;
+  z-index: 2;
 }
-#agentsToggle:hover { background: rgba(217, 178, 90, 0.18); }
+#agentsToggle:hover { background: rgba(217, 178, 90, 0.12); }
 
 /* Reopen-flik: liten stående "AGENTER"-flik */
 #agentsReopen {
