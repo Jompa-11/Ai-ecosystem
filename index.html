@@ -10,8 +10,14 @@
   <!-- Karta -->
   <canvas id="world"></canvas>
 
-  <!-- Topbar (din exakta bild) -->
-  <img id="topbar" src="assets/ui/topbar.png" alt="Dashboard" />
+  <!-- Topbar (din exakta bild) med live-värden ovanpå -->
+  <div id="topbar-wrap">
+    <img id="topbar" src="assets/ui/topbar.png" alt="Dashboard" />
+    <span class="stat-val" id="val-sold"></span>
+    <span class="stat-val" id="val-apiCost"></span>
+    <span class="stat-val" id="val-tokens"></span>
+    <span class="stat-val" id="val-revenue"></span>
+  </div>
 
   <!-- Agent-panel (din exakta bild, fällbar) -->
   <aside id="sidebar">

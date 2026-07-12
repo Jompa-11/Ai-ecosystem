@@ -28,18 +28,38 @@ html, body {
 }
 #world:active { cursor: grabbing; }
 
-/* ---- Topbar (exakt bild) ---- */
-#topbar {
+/* ---- Topbar (exakt bild) med live-värden ovanpå ---- */
+#topbar-wrap {
   position: fixed;
   top: 0; left: 0;
   width: 100vw;
-  height: auto;
-  display: block;
   z-index: 30;
   user-select: none;
-  -webkit-user-drag: none;
   pointer-events: none;
 }
+#topbar {
+  width: 100%;
+  height: auto;
+  display: block;
+  -webkit-user-drag: none;
+}
+.stat-val {
+  position: absolute;
+  top: 66%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  font-size: 2.25vw;
+  line-height: 1;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+#val-sold    { left: 15.0%; color: #e7b64b; }
+#val-apiCost { left: 36.8%; color: #e0564b; }
+#val-tokens  { left: 57.9%; color: #4aa3e6; }
+#val-revenue { left: 79.3%; color: #e79a3a; }
 
 /* ---- Agent-panel (exakt bild) ---- */
 #sidebar {
