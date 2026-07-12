@@ -72,9 +72,10 @@ html, body {
   user-select: none;
 }
 #panelImg {
-  /* Höjd-styrd: fyller aldrig mer än ytan under topbaren, max 470px.
-     Bredden följer proportionellt (ingen förvrängning). */
-  height: min(calc(100vh - var(--topbar-h) - 24px), 470px);
+  /* Höjd-styrd och kompakt. Fyller aldrig mer än ytan under topbaren,
+     som mest 55% av skärmhöjden och max 360px. Bredden följer
+     proportionellt (ingen förvrängning). */
+  height: min(calc(100vh - var(--topbar-h) - 20px), 55vh, 360px);
   width: auto;
   display: block;
   -webkit-user-drag: none;
