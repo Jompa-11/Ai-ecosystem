@@ -104,6 +104,7 @@ function draw() {
     img.height * viewState.scale
   );
 
+  drawSmoke();
   drawGlows();
 }
 
@@ -163,6 +164,66 @@ function drawGlows() {
     ctx.fillStyle = grd;
     ctx.beginPath();
     ctx.arc(sx, sy, rad, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ---- Fabriksrök: rökpluymer som stiger ur Factorys skorstenar ----
+// Positionerna hittades genom att analysera bildens pixlar (mörka, smala
+// skorstenspelare med redan bakad rök ovanför), i bildkoordinater.
+const CHIMNEYS = [
+  { x: 1343, y: 402 },
+  { x: 1399, y: 292 },
+];
+
+let smokeParticles = [];
+const lastSmokeSpawn = CHIMNEYS.map(() => 0);
+
+function spawnSmoke(now) {
+  CHIMNEYS.forEach((ch, i) => {
+    const interval = 0.8 + hash(i * 7.3 + 1) * 0.6;
+    if (now - lastSmokeSpawn[i] > interval) {
+      lastSmokeSpawn[i] = now;
+      smokeParticles.push({
+        x: ch.x + (Math.random() - 0.5) * 3,
+        y: ch.y,
+        born: now,
+        life: 4 + Math.random() * 2.2,
+        drift: (Math.random() - 0.5) * 10,
+        wobble: Math.random() * Math.PI * 2,
+        size0: 2.5 + Math.random() * 1.8,
+      });
+    }
+  });
+  if (smokeParticles.length > 120) {
+    smokeParticles = smokeParticles.filter((p) => now - p.born < p.life);
+  }
+}
+
+function drawSmoke() {
+  if (!smokeParticles.length) return;
+  const s = viewState.scale;
+  const riseHeight = 100;
+  ctx.save();
+  for (const p of smokeParticles) {
+    const t = (animTime - p.born) / p.life;
+    if (t < 0 || t > 1) continue;
+    const ix = p.x + p.drift * t + Math.sin(t * 5 + p.wobble) * 9 * t;
+    const iy = p.y - riseHeight * t;
+    const sx = viewState.x + ix * s;
+    const sy = viewState.y + iy * s;
+    const size = (p.size0 + t * 22) * s;
+    if (size < 0.5) continue;
+    const fadeIn = t < 0.12 ? t / 0.12 : 1;
+    const alpha = fadeIn * (1 - t) * 0.32;
+    const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, size);
+    grd.addColorStop(0, `rgba(205,203,198,${alpha})`);
+    grd.addColorStop(0.55, `rgba(150,148,144,${alpha * 0.6})`);
+    grd.addColorStop(1, 'rgba(120,118,114,0)');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(sx, sy, size, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -284,9 +345,10 @@ if (topbarImg) {
 window.addEventListener('resize', resize);
 resize();
 
-// Kontinuerlig animationsloop för de levande ljusen.
+// Kontinuerlig animationsloop för de levande ljusen och röken.
 function frame(now) {
   animTime = now / 1000;
+  if (imageReady) spawnSmoke(animTime);
   draw();
   requestAnimationFrame(frame);
 }
