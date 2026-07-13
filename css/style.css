@@ -15,27 +15,32 @@ html, body {
   color: #f4e9d0;
 }
 
-/* ---- Karta ---- */
+/* ---- Karta (fyller hela skärmen; topbaren svävar ovanpå) ---- */
 #world {
   position: fixed;
-  top: var(--topbar-h);
+  top: 0;
   left: 0;
   width: 100vw;
-  height: calc(100vh - var(--topbar-h));
+  height: 100vh;
   display: block;
   cursor: grab;
   touch-action: none;
 }
 #world:active { cursor: grabbing; }
 
-/* ---- Topbar (exakt bild) med live-värden ovanpå ---- */
+/* ---- Topbar (exakt bild) med live-värden ovanpå ----
+   Centrerad och max 820px bred så den svävar över slottet i webben
+   istället för att täcka hela skärmens bredd. */
 #topbar-wrap {
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100vw, 820px);
   z-index: 30;
   user-select: none;
   pointer-events: none;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6));
 }
 #topbar {
   width: 100%;
@@ -50,7 +55,9 @@ html, body {
   white-space: nowrap;
   font-family: 'Georgia', serif;
   font-weight: 700;
-  font-size: 2.25vw;
+  /* Följer topbarens bredd: 2.25vw på små skärmar, låst vid 18px när
+     topbaren nått sin maxbredd (820px). */
+  font-size: min(2.25vw, 18px);
   line-height: 1;
   letter-spacing: 0.3px;
   font-variant-numeric: tabular-nums;
