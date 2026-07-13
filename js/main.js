@@ -11,7 +11,9 @@ let imageReady = false;
 let imageFailed = false;
 
 // Vy: skala + förskjutning (bildens övre vänstra hörn i skärmkoordinater).
-const viewState = { scale: 1, x: 0, y: 0, minScale: 1, maxScale: 6 };
+// defaultScale = startvyn (fyller skärmen), minScale = helt utzoomad
+// (hela kartan syns, oavsett skärmens proportioner).
+const viewState = { scale: 1, x: 0, y: 0, minScale: 1, maxScale: 6, defaultScale: 1 };
 
 let width = 0;
 let height = 0;
@@ -46,18 +48,23 @@ function resize() {
   draw();
 }
 
-// Minsta skala = bilden FYLLER hela ytan (cover) så det aldrig blir svarta
-// kanter, precis som i mockupen. Man kan zooma in mer men inte ut förbi detta.
+// Startvyn (defaultScale) fyller skärmen som tidigare, men man kan nu
+// zooma ut hela vägen tills HELA kartan syns (minScale = contain) — även
+// på breda skärmar där toppen/botten annars klipptes bort.
 function computeMinScale() {
-  viewState.minScale = Math.max(width / img.width, height / img.height);
-  viewState.maxScale = viewState.minScale * 4;
+  const cover = Math.max(width / img.width, height / img.height);
+  const contain = Math.min(width / img.width, height / img.height);
+  viewState.defaultScale = cover;
+  viewState.minScale = contain;
+  viewState.maxScale = cover * 4;
   if (viewState.scale < viewState.minScale) viewState.scale = viewState.minScale;
+  if (viewState.scale > viewState.maxScale) viewState.scale = viewState.maxScale;
 }
 
-// Centrera och fyll ytan med bilden.
+// Centrera och fyll ytan med bilden (startvyn).
 function fitToScreen() {
   computeMinScale();
-  viewState.scale = viewState.minScale;
+  viewState.scale = viewState.defaultScale;
   viewState.x = (width - img.width * viewState.scale) / 2;
   viewState.y = (height - img.height * viewState.scale) / 2;
   draw();
