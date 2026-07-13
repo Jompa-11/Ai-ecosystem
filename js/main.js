@@ -1,7 +1,7 @@
 // Enkel bildvisare för ekosystem-kartan: zooma och panorera.
 // Bilden laddas från assets/ecosystem.png.
 
-const IMAGE_SRC = 'assets/ecosystem.png';
+const IMAGE_SRC = 'assets/ecosystem.webp';
 
 const canvas = document.getElementById('world');
 const ctx = canvas.getContext('2d');
@@ -48,16 +48,15 @@ function resize() {
   draw();
 }
 
-// Startvyn (defaultScale) fyller skärmen som tidigare, men man kan nu
-// zooma ut hela vägen tills HELA kartan syns (minScale = contain) — även
-// på breda skärmar där toppen/botten annars klipptes bort.
+// Kartan är nu en bred panorama (vänster vildmark + stad + höger
+// vildmark), så minsta zoom är åter "fyll skärmen" (cover) — det finns
+// alltid kartinnehåll åt sidorna, aldrig tom yta. Skrolla för att
+// utforska hela bredden.
 function computeMinScale() {
   const cover = Math.max(width / img.width, height / img.height);
-  const contain = Math.min(width / img.width, height / img.height);
   viewState.defaultScale = cover;
-  viewState.minScale = contain;
-  // Hög max-zoom: nya kartbilden visar ett stort område, så man ska kunna
-  // zooma in ordentligt på byggnaderna och skrolla runt.
+  viewState.minScale = cover;
+  // Hög max-zoom så man kan gå nära byggnaderna i den utzoomade stilen.
   viewState.maxScale = cover * 8;
   if (viewState.scale < viewState.minScale) viewState.scale = viewState.minScale;
   if (viewState.scale > viewState.maxScale) viewState.scale = viewState.maxScale;
