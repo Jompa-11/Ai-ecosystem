@@ -216,11 +216,13 @@ function drawSmoke() {
     const size = (p.size0 + t * 22) * s;
     if (size < 0.5) continue;
     const fadeIn = t < 0.12 ? t / 0.12 : 1;
-    const alpha = fadeIn * (1 - t) * 0.32;
+    const alpha = fadeIn * (1 - t) * 0.30;
+    // Färgen är samplad från den rök som redan är målad i bilden
+    // (RGB ~88,86,72) så plymerna smälter in i kartans mörka ton.
     const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, size);
-    grd.addColorStop(0, `rgba(205,203,198,${alpha})`);
-    grd.addColorStop(0.55, `rgba(150,148,144,${alpha * 0.6})`);
-    grd.addColorStop(1, 'rgba(120,118,114,0)');
+    grd.addColorStop(0, `rgba(126,123,108,${alpha})`);
+    grd.addColorStop(0.55, `rgba(98,96,82,${alpha * 0.6})`);
+    grd.addColorStop(1, 'rgba(80,78,66,0)');
     ctx.fillStyle = grd;
     ctx.beginPath();
     ctx.arc(sx, sy, size, 0, Math.PI * 2);
