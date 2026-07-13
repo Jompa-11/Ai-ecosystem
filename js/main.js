@@ -56,7 +56,9 @@ function computeMinScale() {
   const contain = Math.min(width / img.width, height / img.height);
   viewState.defaultScale = cover;
   viewState.minScale = contain;
-  viewState.maxScale = cover * 4;
+  // Hög max-zoom: nya kartbilden visar ett stort område, så man ska kunna
+  // zooma in ordentligt på byggnaderna och skrolla runt.
+  viewState.maxScale = cover * 8;
   if (viewState.scale < viewState.minScale) viewState.scale = viewState.minScale;
   if (viewState.scale > viewState.maxScale) viewState.scale = viewState.maxScale;
 }
@@ -139,7 +141,7 @@ const lamps = (window.LAMPS || []).map(([x, y, r, g, b]) => {
     ph2: h2 * Math.PI * 2,
     sp1: 1.6 + h2 * 1.6,
     sp2: 3.8 + h1 * 2.4,
-    baseR: 11,
+    baseR: 6,
     col: [Math.min(255, r + 30), Math.min(255, g + 42), Math.min(255, b + 12)],
   };
 });
@@ -177,12 +179,10 @@ function drawGlows() {
 }
 
 // ---- Fabriksrök: rökpluymer som stiger ur Factorys skorstenar ----
-// Positionerna hittades genom att analysera bildens pixlar (mörka, smala
-// skorstenspelare med redan bakad rök ovanför), i bildkoordinater.
-const CHIMNEYS = [
-  { x: 1343, y: 402 },
-  { x: 1399, y: 292 },
-];
+// OBS: tom just nu — den nya kartbilden är utzoomad och skorstenarna är
+// för små för säker placering. Lägg till { x, y } i bildkoordinater när
+// rök önskas igen.
+const CHIMNEYS = [];
 
 let smokeParticles = [];
 const lastSmokeSpawn = CHIMNEYS.map(() => 0);
