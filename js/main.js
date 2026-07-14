@@ -239,15 +239,10 @@ function drawSmoke() {
 }
 
 // ---- Sci-fi namnbubblor över byggnaderna ----
-// Positionerna (bildkoordinater i panoraman) är detekterade ur bilden:
-// x = byggnadens mitt, yTop = byggnadens högsta punkt.
-const LABELS = [
-  { name: 'HERMES HQ', x: 3596, yTop: 276 },
-  { name: 'RESEARCH CENTER', x: 3352, yTop: 471 },
-  { name: 'FACTORY', x: 3800, yTop: 420 },
-  { name: 'ANALYTICS CENTER', x: 3401, yTop: 672 },
-  { name: 'OFFICE', x: 3896, yTop: 615 },
-];
+// OBS: tom just nu — namnbubblorna är numera inbakade i själva kart-
+// bilden (i varje byggnads färg). Lägg till { name, x, yTop } här om
+// fler byggnader ska få HUD-etiketter i framtiden.
+const LABELS = [];
 
 function drawLabels() {
   const s = viewState.scale;
