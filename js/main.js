@@ -114,6 +114,7 @@ function draw() {
 
   drawSmoke();
   drawGlows();
+  drawLabels();
 }
 
 function drawMessage(text) {
@@ -233,6 +234,89 @@ function drawSmoke() {
     ctx.beginPath();
     ctx.arc(sx, sy, size, 0, Math.PI * 2);
     ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ---- Sci-fi namnbubblor över byggnaderna ----
+// Positionerna (bildkoordinater i panoraman) är detekterade ur bilden:
+// x = byggnadens mitt, yTop = byggnadens högsta punkt.
+const LABELS = [
+  { name: 'HERMES HQ', x: 3596, yTop: 276 },
+  { name: 'RESEARCH CENTER', x: 3352, yTop: 471 },
+  { name: 'FACTORY', x: 3800, yTop: 420 },
+  { name: 'ANALYTICS CENTER', x: 3401, yTop: 672 },
+  { name: 'OFFICE', x: 3896, yTop: 615 },
+];
+
+function drawLabels() {
+  const s = viewState.scale;
+  ctx.save();
+  ctx.font = '600 11px "Courier New", monospace';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '2px';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const L of LABELS) {
+    const sx = viewState.x + L.x * s;
+    const sy = viewState.y + L.yTop * s;
+    if (sx < -180 || sx > width + 180 || sy < -80 || sy > height + 80) continue;
+
+    const tw = ctx.measureText(L.name).width;
+    const padX = 12;
+    const bh = 22;
+    const bw = tw + padX * 2;
+    const by = sy - 34; // panelens mittpunkt i y-led
+    const pulse = 0.75 + 0.25 * Math.sin(animTime * 2.2 + L.x * 0.01);
+
+    // Pekarlinje ner till byggnadens topp med liten lysande punkt.
+    ctx.strokeStyle = `rgba(64,220,255,${0.55 * pulse})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(sx, by + bh / 2);
+    ctx.lineTo(sx, sy - 3);
+    ctx.stroke();
+    ctx.fillStyle = `rgba(64,220,255,${0.9 * pulse})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy - 2, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Panel med klippta hörn (sci-fi-chamfer).
+    const x0 = sx - bw / 2;
+    const x1 = sx + bw / 2;
+    const y0 = by - bh / 2;
+    const y1 = by + bh / 2;
+    const chf = 6;
+    ctx.beginPath();
+    ctx.moveTo(x0 + chf, y0);
+    ctx.lineTo(x1 - chf, y0);
+    ctx.lineTo(x1, y0 + chf);
+    ctx.lineTo(x1, y1 - chf);
+    ctx.lineTo(x1 - chf, y1);
+    ctx.lineTo(x0 + chf, y1);
+    ctx.lineTo(x0, y1 - chf);
+    ctx.lineTo(x0, y0 + chf);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(4,16,24,0.82)';
+    ctx.fill();
+    // Pulserande neonkant med glow.
+    ctx.shadowColor = 'rgba(64,220,255,0.9)';
+    ctx.shadowBlur = 8 * pulse;
+    ctx.strokeStyle = `rgba(64,220,255,${0.85 * pulse})`;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Små hörnmarkeringar (targeting brackets) vänster/höger.
+    ctx.strokeStyle = `rgba(140,240,255,${0.9 * pulse})`;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(x0 - 4, by - 5); ctx.lineTo(x0 - 4, by + 5);
+    ctx.moveTo(x1 + 4, by - 5); ctx.lineTo(x1 + 4, by + 5);
+    ctx.stroke();
+
+    // Namntext.
+    ctx.fillStyle = 'rgba(215,246,255,0.96)';
+    ctx.fillText(L.name, sx, by + 0.5);
   }
   ctx.restore();
 }

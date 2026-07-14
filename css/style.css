@@ -36,7 +36,7 @@ html, body {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: min(100vw, 820px);
+  width: min(100vw, 410px);
   z-index: 30;
   user-select: none;
   pointer-events: none;
@@ -55,9 +55,9 @@ html, body {
   white-space: nowrap;
   font-family: 'Georgia', serif;
   font-weight: 700;
-  /* Följer topbarens bredd: 2.25vw på små skärmar, låst vid 18px när
-     topbaren nått sin maxbredd (820px). */
-  font-size: min(2.25vw, 18px);
+  /* Följer topbarens bredd: 2.25vw på små skärmar, låst vid 9px när
+     topbaren nått sin maxbredd (410px). */
+  font-size: min(2.25vw, 9px);
   line-height: 1;
   letter-spacing: 0.3px;
   font-variant-numeric: tabular-nums;
